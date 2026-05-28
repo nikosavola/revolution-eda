@@ -64,3 +64,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 # Allow lines to be as long as 120.
 line-length = 92
+
+[tool.ruff.lint]
+select = ["BLE001"]
