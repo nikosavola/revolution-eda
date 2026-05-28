@@ -82,7 +82,7 @@ class FileCache:
             self._cache.pop(path_str, None)
             return None
 
-        # Evict oldest entries if cache is full
+        # Evict oldest entries if cache is full (FIFO eviction)
         if len(self._cache) >= self._max_size:
             # Remove ~25% of entries (oldest by insertion order)
             to_remove = list(self._cache.keys())[:self._max_size // 4]
