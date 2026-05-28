@@ -56,12 +56,16 @@ schlyr = importPDKModule("schLayers")
 
 
 class NetMode(IntEnum):
+    """Net routing mode: orthogonal (Manhattan), diagonal (45°), or free-form."""
+
     ORTHOGONAL = 0
     DIAGONAL = 1
     FREE = 2
 
 
 class netNameStrengthEnum(IntEnum):
+    """Priority levels for net naming: higher strength overrides lower."""
+
     NONAME = 0
     WEAK = 1
     INHERIT = 2
@@ -69,6 +73,18 @@ class netNameStrengthEnum(IntEnum):
 
 
 class schematicNet(QGraphicsItem):
+    """Graphical representation of a wire/net in the schematic editor.
+
+    Manages net connectivity, routing geometry, name assignment and propagation,
+    and visual rendering of wires between schematic pins and other nets.
+
+    Args:
+        start: Starting point of the net segment.
+        end: Ending point of the net segment.
+        width: Line width in pixels (0 = default from PDK layers).
+        mode: Routing mode (0=orthogonal, 1=diagonal, 2=free).
+    """
+
     def __init__(self, start: QPoint, end: QPoint, width: int = 0, mode: int = 0):
         super().__init__()
 

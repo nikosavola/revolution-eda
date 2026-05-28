@@ -47,6 +47,13 @@ import revedaEditor.scenes.symbolScene as symscn
 
 
 class symbolEditor(edw.editorWindow):
+    """Symbol editor window for creating and editing cell symbols.
+
+    Provides tools for drawing shapes (rectangles, circles, arcs, lines, polygons),
+    placing pins, adding labels, and defining the symbol origin. Symbols created here
+    are used as visual representations of cells in schematics.
+    """
+
     def __init__(
             self,
             viewItem: libb.viewItem,

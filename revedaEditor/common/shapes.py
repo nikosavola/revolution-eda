@@ -45,6 +45,13 @@ symlyr = importPDKModule("symLayers")
 
 
 class symbolShape(QGraphicsItem):
+    """Base class for all symbol editor graphics items.
+
+    Provides common functionality for shapes in the symbol and schematic editors,
+    including rotation, flipping, selection handling, hover events, pen/brush
+    management, and draft mode rendering.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self.setFlag(QGraphicsItem.ItemIsMovable, False)

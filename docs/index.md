@@ -97,3 +97,27 @@ allows per-cell view selection with customizable switch and stop view lists.
 ------
 
 ### [Plugins](./plugins.md)
+
+------
+
+## Developer Documentation
+
+### [Architecture Guide](./architecture.md)
+
+A comprehensive overview of the internal architecture including module dependencies,
+data model documentation, threading model, plugin system, and key design patterns.
+
+### [Contributing](../CONTRIBUTING.md)
+
+Guide for new contributors with development setup instructions, coding standards,
+testing guidelines, and the pull request process.
+
+### [API Reference](./api/index.rst)
+
+Auto-generated API documentation using Sphinx. To build locally:
+```bash
+pip install sphinx sphinx-rtd-theme myst-parser
+cd docs/api
+make html
+```
+

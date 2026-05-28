@@ -60,6 +60,13 @@ laylyr = importPDKModule("layoutLayers")
 
 
 class layoutEditor(edw.editorWindow):
+    """Layout editor window for physical IC design.
+
+    Provides tools for drawing metal paths, placing vias, creating polygons and
+    rectangles, managing pins and labels, and performing DRC-aware operations.
+    Includes the Layer Selection Window (LSW) for layer visibility control.
+    """
+
     def __init__(self, viewItem: libb.viewItem, libraryDict: dict, libraryView) -> None:
         super().__init__(viewItem, libraryDict, libraryView)
         self.setWindowTitle(f"Layout Editor - {self.cellName} - {self.viewName}")
@@ -682,6 +689,8 @@ class LayerFilterProxyModel(QSortFilterProxyModel):
 
 
 class lswWindow(QWidget):
+    """Layer Selection Window: controls layer visibility and selectability for layout editing."""
+
     def __init__(self, lswTable: lsw.layerViewTable):
         super().__init__()
         self.lswTable = lswTable

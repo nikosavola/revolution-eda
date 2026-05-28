@@ -57,6 +57,12 @@ schlyr = importPDKModule('schLayers')
 
 
 class schematicScene(editorScene):
+    """Scene for schematic editing: wire routing, instance placement, and net management.
+
+    Handles mouse interactions for drawing wires and buses, placing component instances,
+    naming nets, and managing schematic-specific selection and connectivity.
+    """
+
     wireEditFinished = Signal(snet.schematicNet)
     alignLineFinished = Signal(shp.alignLine)
     stretchNet = Signal(snet.schematicNet, str)

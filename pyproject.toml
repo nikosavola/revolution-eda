@@ -53,6 +53,9 @@ pytest = "~8.4.1"
 black = "~25.9.0"
 nuitka = "^4.0"
 pyqtgraph = { git = "https://github.com/pyqtgraph/pyqtgraph.git", branch = "master" }
+sphinx = "^8.0"
+sphinx-rtd-theme = "^3.0"
+myst-parser = "^4.0"
 
 [tool.poetry.scripts]
 reveda = "reveda:main"

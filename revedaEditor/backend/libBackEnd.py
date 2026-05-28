@@ -32,6 +32,16 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 
 
 class libraryItem(QStandardItem):
+    """Represents a design library in the library hierarchy.
+
+    A library corresponds to a directory on disk containing cells. It is displayed
+    as a top-level node in the library browser tree and stores its path, name, and
+    type metadata via Qt's UserRole data mechanism.
+
+    Args:
+        libraryPath: Filesystem path to the library directory.
+    """
+
     def __init__(self, libraryPath: pathlib.Path):  # path is a pathlib.Path object
         self._libraryPath = libraryPath
         self._libraryName = libraryPath.name
@@ -66,6 +76,16 @@ class libraryItem(QStandardItem):
 
 
 class cellItem(QStandardItem):
+    """Represents a design cell within a library.
+
+    A cell is a subdirectory within a library that contains one or more views
+    (schematic, symbol, layout, etc.). It appears as a child node of a libraryItem
+    in the library browser tree.
+
+    Args:
+        cellPath: Filesystem path to the cell directory.
+    """
+
     def __init__(self, cellPath: pathlib.Path) -> None:
         self.cellPath = cellPath
         self._cellName = cellPath.stem
@@ -118,6 +138,16 @@ class cellItem(QStandardItem):
 
 
 class viewItem(QStandardItem):
+    """Represents a specific view of a cell (schematic, symbol, layout, etc.).
+
+    A view is a JSON file within a cell directory. The view type is determined
+    from the filename (e.g., 'schematic.json', 'symbol.json', 'layout.json').
+    Views appear as leaf nodes in the library browser tree.
+
+    Args:
+        viewPath: Filesystem path to the view JSON file.
+    """
+
     def __init__(self, viewPath: pathlib.Path) -> None:
         self.viewPath = viewPath
         self.viewName = viewPath.stem

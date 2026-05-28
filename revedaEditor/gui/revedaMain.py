@@ -104,6 +104,12 @@ class mainwContainer(QWidget):
 
 
 class MainWindow(QMainWindow):
+    """Application main window managing the library browser, editors, and console.
+
+    Coordinates the overall application lifecycle including library loading,
+    editor window creation, PDK/plugin initialization, and user preferences.
+    """
+
     # Class-level constants
     WINDOW_SIZE = QSize(900, 300)
     VIEW_TYPES = {

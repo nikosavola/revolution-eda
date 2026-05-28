@@ -42,6 +42,14 @@ if TYPE_CHECKING:
 
 
 class editorScene(QGraphicsScene):
+    """Base class for all editor scenes (schematic, symbol, layout).
+
+    Manages grid drawing, snap-to-grid logic, mouse event dispatching based
+    on the current edit mode, selection state, clipboard operations, and
+    undo/redo integration. Subclasses implement domain-specific behavior
+    for symbol, schematic, and layout editing.
+    """
+
     # Define MOUSE_EVENTS as a class attribute to avoid recreating it on every call
     MOUSE_EVENTS = {QEvent.Type.GraphicsSceneMouseMove, QEvent.Type.GraphicsSceneMousePress,
                     QEvent.Type.GraphicsSceneMouseRelease, }

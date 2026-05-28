@@ -29,6 +29,13 @@ from revedaEditor.backend import libBackEnd as libb
 
 @dataclass
 class edLayer:
+    """Defines an editor layer with visual styling and GDS mapping.
+
+    Editor layers control the appearance of shapes in the schematic and symbol
+    editors, including pen/brush colors, line styles, z-ordering, and the
+    corresponding GDS layer/datatype for export.
+    """
+
     name: str = ""  # edLayer name
     purpose: str = "drawing"  # edLayer purpose
     pcolor: QColor = Qt.black  # pen colour
@@ -45,6 +52,12 @@ class edLayer:
 
 @dataclass
 class layLayer:
+    """Defines a layout layer with visual styling, stipple patterns, and GDS mapping.
+
+    Layout layers extend the base layer concept with stipple texture support for
+    fill patterns. They map to specific GDS layer/datatype pairs for physical export.
+    """
+
     name: str = "Default"  # edLayer name
     purpose: str = "drawing"  # edLayer purpose
     pcolor: QColor = Qt.black  # pen colour
@@ -70,6 +83,13 @@ class layLayer:
 
 @dataclass
 class editModes:
+    """Base state machine for editor interaction modes.
+
+    Only one mode can be active at a time. The `setMode()` method deactivates all
+    modes and activates the specified one. Subclasses add domain-specific modes
+    for symbol, schematic, and layout editing.
+    """
+
     selectItem: bool
     deleteItem: bool
     moveItem: bool
@@ -95,6 +115,8 @@ class editModes:
 
 @dataclass
 class symbolModes(editModes):
+    """Edit modes for the symbol editor, adding shape drawing operations."""
+
     drawPin: bool
     drawArc: bool
     drawRect: bool
@@ -106,6 +128,8 @@ class symbolModes(editModes):
 
 @dataclass
 class schematicModes(editModes):
+    """Edit modes for the schematic editor, adding wiring and instance operations."""
+
     drawPin: bool
     drawWire: bool
     drawBus: bool
@@ -116,6 +140,8 @@ class schematicModes(editModes):
 
 @dataclass
 class layoutModes(editModes):
+    """Edit modes for the layout editor, adding physical design operations."""
+
     drawPath: bool
     drawPin: bool
     drawArc: bool
@@ -132,6 +158,11 @@ class layoutModes(editModes):
 
 @dataclass
 class selectModes:
+    """Base selection filter state machine.
+
+    Controls which types of items are selectable in the editor.
+    """
+
     selectAll: bool
 
     def setMode(self, attribute):
@@ -142,6 +173,8 @@ class selectModes:
 
 @dataclass
 class schematicSelectModes(selectModes):
+    """Selection filters for schematic items (devices, nets, pins)."""
+
     selectDevice: bool
     selectNet: bool
     selectPin: bool
@@ -149,6 +182,8 @@ class schematicSelectModes(selectModes):
 
 @dataclass
 class layoutSelectModes(selectModes):
+    """Selection filters for layout items (instances, paths, vias, labels, etc.)."""
+
     selectInstance: bool
     selectPath: bool
     selectVia: bool
@@ -159,17 +194,23 @@ class layoutSelectModes(selectModes):
 
 # library editor related named tuples
 class viewNameTuple(NamedTuple):
+    """Identifies a view by its library, cell, and view names (string-based)."""
+
     libraryName: str
     cellName: str
     viewName: str
 
 
 class cellTuple(NamedTuple):
+    """Identifies a cell by its library and cell names."""
+
     libraryName: str
     cellName: str
 
 
 class viewItemTuple(NamedTuple):
+    """References actual Qt model items for a library/cell/view triple."""
+
     libraryItem: libb.libraryItem
     cellItem: libb.cellItem
     viewItem: libb.viewItem
@@ -183,6 +224,8 @@ class viewItemTuple(NamedTuple):
 
 
 class layoutPinTuple(NamedTuple):
+    """Defines a layout pin with name, direction, type, and layer assignment."""
+
     pinName: str
     pinDir: str
     pinType: str
@@ -190,6 +233,8 @@ class layoutPinTuple(NamedTuple):
 
 
 class layoutLabelTuple(NamedTuple):
+    """Defines a layout label with text, font, alignment, and layer properties."""
+
     labelText: str
     fontFamily: str
     fontStyle: str
@@ -200,6 +245,8 @@ class layoutLabelTuple(NamedTuple):
 
 
 class rulerTuple(NamedTuple):
+    """Stores ruler measurement data: anchor point, line segment, and text label."""
+
     point: Union[QPoint, QPointF]
     line: tuple
     text: str
@@ -212,6 +259,8 @@ class rulerTuple(NamedTuple):
 
 # used in PDK
 class viaDefTuple(NamedTuple):
+    """PDK via definition with dimension and spacing constraints."""
+
     name: str
     layer: layLayer
     type: str
@@ -225,6 +274,8 @@ class viaDefTuple(NamedTuple):
 
 # Used to define the via prototype
 class singleViaTuple(NamedTuple):
+    """A single via instance with its definition and specific dimensions."""
+
     viaDefTuple: viaDefTuple
     width: float
     height: float
@@ -232,6 +283,8 @@ class singleViaTuple(NamedTuple):
 
 # both single vias and vias arrays are defined by this
 class arrayViaTuple(NamedTuple):
+    """An array of vias with spacing and repetition counts in x and y."""
+
     singleViaTuple: singleViaTuple
     xs: float
     ys: float
@@ -241,6 +294,8 @@ class arrayViaTuple(NamedTuple):
 
 # rectangle coordinates tuple
 class rectCoords(NamedTuple):
+    """Rectangle defined by top-left corner coordinates and dimensions."""
+
     left: float
     top: float
     w: float
@@ -248,6 +303,8 @@ class rectCoords(NamedTuple):
 
 
 class layoutPathDefTuple(NamedTuple):
+    """PDK path/routing definition with width, length, and spacing constraints."""
+
     name: str
     layer: layLayer
     type: str
@@ -260,6 +317,8 @@ class layoutPathDefTuple(NamedTuple):
 
 
 class layoutPathTuple(NamedTuple):
+    """A layout path instance with specific mode, width, and end extensions."""
+
     name: str
     layer: layLayer
     pathMode: int

@@ -35,6 +35,16 @@ from revedaEditor.backend.dataDefinitions import viewItemTuple
 
 
 class pluginsLoader:
+    """Dynamically loads and manages plugins from the plugins directory.
+
+    Scans the plugins path for Python packages, imports them, reads their
+    config.json files for menu integration, and provides methods to inject
+    plugin menu items into editor windows and handle custom view types.
+
+    Args:
+        pluginsPath: Filesystem path to the plugins directory.
+    """
+
     def __init__(self, pluginsPath: Path):
         self.plugins = {}
         self.pluginsPathObj: Path = pluginsPath

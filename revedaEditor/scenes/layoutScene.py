@@ -71,6 +71,13 @@ pcells = importPDKModule("pcells")
 
 
 class layoutScene(editorScene):
+    """Scene for layout editing: path routing, via placement, and polygon drawing.
+
+    Handles mouse interactions for physical layout operations including metal path
+    routing, via array placement, polygon drawing, design rule-aware snapping,
+    and ruler measurements.
+    """
+
     LAYOUT_SHAPES = (
         lshp.layoutRect,
         lshp.layoutPin,
