@@ -24,6 +24,9 @@
 
 """Layout scene properties mixin: property dialogs and editing."""
 
+import inspect
+
+from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QDialog
 
 import revedaEditor.backend.dataDefinitions as ddef
@@ -104,7 +107,6 @@ class LayoutScenePropertiesMixin:
             startY = self.snapToBase(
                 float(dlg.yLocationEdit.text()) * self._scale, self.snapGrid
             )
-            from PySide6.QtCore import QPoint
             newStart = QPoint(startX, startY)
             xnum = int(dlg.xNumEdit.text())
             ynum = int(dlg.yNumEdit.text())
@@ -217,7 +219,6 @@ class LayoutScenePropertiesMixin:
         if hasattr(pcells, instance.cellName):
             pcellClass = getattr(pcells, instance.cellName)
             if hasattr(pcellClass, '__init__'):
-                import inspect
                 sig = inspect.signature(pcellClass.__init__)
                 for name, param in sig.parameters.items():
                     if name == 'self':

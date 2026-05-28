@@ -26,10 +26,7 @@
 LVS Results package.
 
 Provides the lvsResultsDialogue for displaying and navigating LVS results.
-The monolithic widget has been split into:
-- dialogue.py: Main dialogue class
-- tabs.py: Tab building mixin
-- highlighting.py: Highlighting system mixin
+- dialogue.py: Main dialogue class with all tab building and highlighting logic
 """
 
 from revedaEditor.gui.lvsResults.dialogue import lvsResultsDialogue
