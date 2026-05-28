@@ -902,11 +902,7 @@ class schematicScene(editorScene):
                     )
                 return
             with self.measureDuration():
-                if len(decodedData) < 2:
-                    gridSettings = None
-                    itemData = []
-                else:
-                    viewDict, gridSettings, *itemData = decodedData
+                viewDict, gridSettings, *itemData = decodedData
 
                 if gridSettings and gridSettings.get("snapGrid"):
                     self.editorWindow.configureGridSettings(

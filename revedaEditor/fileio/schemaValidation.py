@@ -41,6 +41,9 @@ logger = logging.getLogger(__name__)
 # Current schema version for future migration support
 SCHEMA_VERSION = "1.0"
 
+# Maximum number of validation errors to report before truncating
+MAX_VALIDATION_ERRORS = 10
+
 # ---------------------------------------------------------------------------
 # Common schema fragments
 # ---------------------------------------------------------------------------
@@ -620,10 +623,10 @@ def validate_design_data(
             try:
                 jsonschema.validate(instance=data, schema=schema)
             except ValidationError as e:
-                # Collect up to 10 errors for user feedback
+                # Collect errors for user feedback
                 validator = jsonschema.Draft7Validator(schema)
                 for i, err in enumerate(validator.iter_errors(data)):
-                    if i >= 10:
+                    if i >= MAX_VALIDATION_ERRORS:
                         errors.append("... (additional errors truncated)")
                         break
                     errors.append(_format_validation_error(err))
