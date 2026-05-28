@@ -116,7 +116,7 @@ testing guidelines, and the pull request process.
 
 Auto-generated API documentation using Sphinx. To build locally:
 ```bash
-pip install sphinx sphinx-rtd-theme myst-parser
+poetry install  # installs Sphinx and other dev dependencies
 cd docs/api
 make html
 ```

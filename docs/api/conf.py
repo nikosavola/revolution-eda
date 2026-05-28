@@ -7,14 +7,14 @@ import os
 import sys
 
 # Add the project root to the path so Sphinx can find the modules
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 
 project = "Revolution EDA"
 copyright = "2024, Revolution Semiconductor"
 author = "Revolution Semiconductor"
-release = "0.8.11"
+release = "0.8.11"  # Keep in sync with pyproject.toml [tool.poetry] version
 
 # -- General configuration ---------------------------------------------------
 
