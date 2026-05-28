@@ -61,6 +61,8 @@ import revedaEditor.gui.propertyDialogues as pdlg
 from revedaEditor.backend.pdkLoader import importPDKModule
 from revedaEditor.gui.alignItems import alignItemsDialogue, alignToLine
 from revedaEditor.scenes.editorScene import editorScene
+from revedaEditor.scenes._layoutSceneIO import LayoutSceneIOMixin
+from revedaEditor.scenes._layoutSceneProperties import LayoutScenePropertiesMixin
 
 # from contextlib import contextmanager
 
@@ -70,7 +72,7 @@ schlyr = importPDKModule("schLayers")
 pcells = importPDKModule("pcells")
 
 
-class layoutScene(editorScene):
+class layoutScene(LayoutSceneIOMixin, LayoutScenePropertiesMixin, editorScene):
     LAYOUT_SHAPES = (
         lshp.layoutRect,
         lshp.layoutPin,

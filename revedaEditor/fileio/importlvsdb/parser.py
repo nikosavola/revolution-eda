@@ -21,6 +21,9 @@
 #     License: Mozilla Public License 2.0
 #     Licensor: Revolution Semiconductor (Registered in the Netherlands)
 
+
+"""Core LVSDB file parser."""
+
 from collections import Counter
 import re
 from typing import List, Dict, Any, Optional, Iterator, Tuple
@@ -28,32 +31,6 @@ from typing import List, Dict, Any, Optional, Iterator, Tuple
 from PySide6.QtGui import (QBrush, QColor, QPen)
 from PySide6.QtCore import (QRect, Qt)
 from PySide6.QtWidgets import QGraphicsRectItem
-
-# from revedaEditor.backend.pdkLoader import importPDKModule
-
-class LVSErrorRect(QGraphicsRectItem):
-    def __init__(self, rect: QRect) -> None:
-        super().__init__(rect)
-        self.lvsRect = rect
-        # self.setBrush(QBrush(QColor(255, 0, 0, 100)))
-        self.setZValue(100)
-        # self.setOpacity(0.3)
-        # self.setPen(QPen(QColor(255, 0, 0), 2, Qt.PenStyle.DashLine))
-        self._cell = ""
-
-    def __repr__(self) -> str:
-        return f"LVSErrorRect({self.lvsRect})"
-
-    def __str__(self) -> str:
-        return f"LVSErrorRect({self.lvsRect})"
-
-    @property
-    def cell(self):
-        return self._cell
-
-    @cell.setter
-    def cell(self, value: str):
-        self._cell = value
 
 
 class LVSDBParser:

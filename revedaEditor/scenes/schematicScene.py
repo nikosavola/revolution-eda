@@ -52,11 +52,12 @@ import revedaEditor.gui.fileDialogues as fd
 import revedaEditor.gui.propertyDialogues as pdlg
 from revedaEditor.backend.pdkLoader import importPDKModule
 from revedaEditor.scenes.editorScene import editorScene
+from revedaEditor.scenes._schematicSceneNets import SchematicSceneNetsMixin
 
 schlyr = importPDKModule('schLayers')
 
 
-class schematicScene(editorScene):
+class schematicScene(SchematicSceneNetsMixin, editorScene):
     wireEditFinished = Signal(snet.schematicNet)
     alignLineFinished = Signal(shp.alignLine)
     stretchNet = Signal(snet.schematicNet, str)
