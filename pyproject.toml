@@ -52,6 +52,7 @@ cryptography = "^46.0.3"
 pytest = "~8.4.1"
 black = "~25.9.0"
 nuitka = "^4.0"
+mypy = "^1.15"
 pyqtgraph = { git = "https://github.com/pyqtgraph/pyqtgraph.git", branch = "master" }
 
 [tool.poetry.scripts]
@@ -64,3 +65,40 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 # Allow lines to be as long as 120.
 line-length = 92
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = true
+no_implicit_optional = true
+strict_equality = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-cast", "unused-awaitable"]
+
+# Incrementally enforce strict typing on annotated modules
+[[tool.mypy.overrides]]
+module = [
+    "revedaEditor.backend.dataDefinitions",
+]
+disallow_untyped_defs = true
+
+# Ignore missing stubs for third-party libraries
+[[tool.mypy.overrides]]
+module = [
+    "PySide6.*",
+    "quantiphy.*",
+    "gdstk.*",
+    "numpy.*",
+    "polars.*",
+    "orjson.*",
+    "anthropic.*",
+    "google.*",
+    "lxml.*",
+    "markdown.*",
+]
+ignore_missing_imports = true

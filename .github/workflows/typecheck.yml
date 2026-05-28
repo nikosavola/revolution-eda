@@ -1,0 +1,37 @@
+name: Type Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  mypy:
+    name: mypy type checking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mypy
+          # Install minimal runtime deps for type checking
+          python -m pip install PySide6 quantiphy numpy gdstk polars orjson
+
+      - name: Run mypy (non-blocking)
+        continue-on-error: true
+        run: |
+          mypy revedaEditor/backend/dataDefinitions.py \
+               revedaEditor/common/shapes.py \
+               revedaEditor/common/layoutShapes.py \
+               revedaEditor/fileio/loadJSON.py \
+               --config-file pyproject.toml
