@@ -92,6 +92,7 @@ class LVSDBParser:
         self.layout_cells: Dict[str, Dict] = {}
         self.schematic_cells: Dict[str, Dict] = {}
         self.crossrefs: Dict[str, Dict] = {}
+        self._section_cache: Dict[str, Optional[List]] = {}
 
         if pdk_module:
             self._build_gds_lookup()
@@ -173,9 +174,13 @@ class LVSDBParser:
 
     def _find_section(self, tag: str) -> Optional[List]:
         """Return the content list immediately following the first occurrence of tag in self.data."""
+        if tag in self._section_cache:
+            return self._section_cache[tag]
         for i in range(len(self.data) - 1):
             if self.data[i] == tag and isinstance(self.data[i + 1], list):
+                self._section_cache[tag] = self.data[i + 1]
                 return self.data[i + 1]
+        self._section_cache[tag] = None
         return None
 
     def _process_units(self):
@@ -486,15 +491,15 @@ class LVSDBParser:
         Returns:
             List of layout cell name strings.
         """
-        cells = []
         section = self._find_section('J')
-        if section is not None:
-            for j in range(len(section)):
-                if section[j] == 'X' and j + 1 < len(section):
-                    item = section[j + 1]
-                    if isinstance(item, list) and len(item) >= 1:
-                        cells.append(item[0])
-        return cells
+        if section is None:
+            return []
+        return [
+            section[j + 1][0]
+            for j in range(len(section))
+            if section[j] == 'X' and j + 1 < len(section)
+            and isinstance(section[j + 1], list) and len(section[j + 1]) >= 1
+        ]
 
     def get_all_schematic_cells(self) -> List[str]:
         """
@@ -506,15 +511,15 @@ class LVSDBParser:
         Returns:
             List of schematic cell name strings.
         """
-        cells = []
         section = self._find_section('H')
-        if section is not None:
-            for j in range(len(section)):
-                if section[j] == 'X' and j + 1 < len(section):
-                    item = section[j + 1]
-                    if isinstance(item, list) and len(item) >= 1:
-                        cells.append(item[0])
-        return cells
+        if section is None:
+            return []
+        return [
+            section[j + 1][0]
+            for j in range(len(section))
+            if section[j] == 'X' and j + 1 < len(section)
+            and isinstance(section[j + 1], list) and len(section[j + 1]) >= 1
+        ]
 
     def _safe_get(self, lst: List, idx: int, default: Any = None) -> Any:
         """

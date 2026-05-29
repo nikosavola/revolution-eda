@@ -593,6 +593,8 @@ class xyceNetlist:
                 expandedPinNameList.append(pinBaseName)
             else:
                 pinStep = 1 if pinTuple[1] >= pinTuple[0] else -1
-                for i in range(pinTuple[0], pinTuple[1] + pinStep):
-                    expandedPinNameList.append(f'{pinBaseName}<{i}>')
+                expandedPinNameList.extend(
+                    f'{pinBaseName}<{i}>'
+                    for i in range(pinTuple[0], pinTuple[1] + pinStep, pinStep)
+                )
         return ' '.join(expandedPinNameList)
