@@ -28,9 +28,21 @@ Schema validation for Revolution EDA JSON design files.
 Provides JSON Schema definitions and validation utilities for symbol,
 schematic, and layout files. Validates files on load to provide clear
 error messages instead of cryptic exceptions.
+
+The canonical JSON Schema files are stored alongside this module in the
+``schemas/`` directory.  They can be referenced from design JSON files
+using the standard ``$schema`` property pointing to the schema ``$id``:
+
+  - Symbol:    https://reveda.org/schemas/v1.0/symbol.schema.json
+  - Schematic: https://reveda.org/schemas/v1.0/schematic.schema.json
+  - Layout:    https://reveda.org/schemas/v1.0/layout.schema.json
+
+Or by relative path to the bundled schema files.
 """
 
+import json
 import logging
+import pathlib
 from typing import Any, List, Optional, Tuple
 
 import jsonschema
@@ -45,471 +57,29 @@ SCHEMA_VERSION = "1.0"
 MAX_VALIDATION_ERRORS = 10
 
 # ---------------------------------------------------------------------------
-# Common schema fragments
+# Load schemas from JSON files
 # ---------------------------------------------------------------------------
 
-_POINT_SCHEMA = {
-    "type": "array",
-    "items": {"type": "number"},
-    "minItems": 2,
-    "maxItems": 2,
-}
+_SCHEMAS_DIR = pathlib.Path(__file__).parent / "schemas"
 
-_FLIP_TUPLE_SCHEMA = {
-    "type": "array",
-    "items": {"type": ["number", "integer"]},
-    "minItems": 2,
-    "maxItems": 2,
-}
 
-_RECT_COORDS_SCHEMA = {
-    "type": "array",
-    "items": {"type": "number"},
-    "minItems": 4,
-    "maxItems": 4,
-}
+def _load_schema(filename: str) -> dict:
+    """Load a JSON schema file from the schemas directory."""
+    schema_path = _SCHEMAS_DIR / filename
+    try:
+        with open(schema_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.error(f"Schema file not found: {schema_path}")
+        raise
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in schema file {schema_path}: {e}")
+        raise
 
-# ---------------------------------------------------------------------------
-# Symbol item schemas
-# ---------------------------------------------------------------------------
 
-_SYMBOL_RECT_ITEM = {
-    "type": "object",
-    "required": ["type", "rect", "loc"],
-    "properties": {
-        "type": {"const": "rect"},
-        "rect": _RECT_COORDS_SCHEMA,
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SYMBOL_LINE_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "end", "loc"],
-    "properties": {
-        "type": {"const": "line"},
-        "st": _POINT_SCHEMA,
-        "end": _POINT_SCHEMA,
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SYMBOL_CIRCLE_ITEM = {
-    "type": "object",
-    "required": ["type", "cen", "end", "loc"],
-    "properties": {
-        "type": {"const": "circle"},
-        "cen": _POINT_SCHEMA,
-        "end": _POINT_SCHEMA,
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SYMBOL_ARC_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "end", "loc", "at"],
-    "properties": {
-        "type": {"const": "arc"},
-        "st": _POINT_SCHEMA,
-        "end": _POINT_SCHEMA,
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-        "at": {"type": "integer", "minimum": 0},
-    },
-}
-
-_SYMBOL_POLYGON_ITEM = {
-    "type": "object",
-    "required": ["type", "ps"],
-    "properties": {
-        "type": {"const": "polygon"},
-        "ps": {"type": "array", "items": _POINT_SCHEMA, "minItems": 2},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SYMBOL_PIN_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "nam", "pd", "pt", "loc", "ang"],
-    "properties": {
-        "type": {"const": "pin"},
-        "st": _POINT_SCHEMA,
-        "nam": {"type": "string"},
-        "pd": {"type": "string"},
-        "pt": {"type": "string"},
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SYMBOL_TEXT_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "tc", "ff", "fs", "th", "ta", "to", "loc"],
-    "properties": {
-        "type": {"const": "text"},
-        "st": _POINT_SCHEMA,
-        "tc": {"type": "string"},
-        "ff": {"type": "string"},
-        "fs": {"type": "string"},
-        "th": {"type": ["number", "integer"]},
-        "ta": {"type": "string"},
-        "to": {"type": "string"},
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SYMBOL_LABEL_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "nam", "def", "txt", "val", "vis",
-                 "lt", "ht", "al", "or", "use", "loc"],
-    "properties": {
-        "type": {"const": "label"},
-        "st": _POINT_SCHEMA,
-        "nam": {"type": "string"},
-        "def": {"type": "string"},
-        "txt": {"type": "string"},
-        "val": {"type": "string"},
-        "vis": {"type": "boolean"},
-        "lt": {"type": "string"},
-        "ht": {"type": ["number", "integer"]},
-        "al": {"type": "string"},
-        "or": {"type": "string"},
-        "use": {"type": "string"},
-        "loc": _POINT_SCHEMA,
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SYMBOL_ATTR_ITEM = {
-    "type": "object",
-    "required": ["type", "nam", "def"],
-    "properties": {
-        "type": {"const": "attr"},
-        "nam": {"type": "string"},
-        "def": {"type": "string"},
-    },
-}
-
-_SYMBOL_ITEM_SCHEMA = {
-    "oneOf": [
-        _SYMBOL_RECT_ITEM,
-        _SYMBOL_LINE_ITEM,
-        _SYMBOL_CIRCLE_ITEM,
-        _SYMBOL_ARC_ITEM,
-        _SYMBOL_POLYGON_ITEM,
-        _SYMBOL_PIN_ITEM,
-        _SYMBOL_TEXT_ITEM,
-        _SYMBOL_LABEL_ITEM,
-        _SYMBOL_ATTR_ITEM,
-    ]
-}
-
-# ---------------------------------------------------------------------------
-# Schematic item schemas
-# ---------------------------------------------------------------------------
-
-_SCHEMATIC_SYMBOL_ITEM = {
-    "type": "object",
-    "required": ["type", "lib", "cell", "view", "nam", "ic", "ld", "loc"],
-    "properties": {
-        "type": {"const": "sys"},
-        "lib": {"type": "string"},
-        "cell": {"type": "string"},
-        "view": {"type": "string"},
-        "nam": {"type": "string"},
-        "ic": {"type": "integer"},
-        "ld": {"type": "object"},
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "ign": {"type": "integer"},
-        "br": _RECT_COORDS_SCHEMA,
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SCHEMATIC_NET_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "end", "nam", "ns"],
-    "properties": {
-        "type": {"const": "scn"},
-        "st": _POINT_SCHEMA,
-        "end": _POINT_SCHEMA,
-        "nam": {"type": "string"},
-        "ns": {"type": "integer"},
-    },
-}
-
-_SCHEMATIC_PIN_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "pn", "pd", "pt"],
-    "properties": {
-        "type": {"const": "scp"},
-        "st": _POINT_SCHEMA,
-        "pn": {"type": "string"},
-        "pd": {"type": "string"},
-        "pt": {"type": "string"},
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SCHEMATIC_TEXT_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "tc", "ff", "fs", "th", "ta", "to"],
-    "properties": {
-        "type": {"const": "txt"},
-        "st": _POINT_SCHEMA,
-        "tc": {"type": "string"},
-        "ff": {"type": "string"},
-        "fs": {"type": "string"},
-        "th": {"type": ["number", "integer"]},
-        "ta": {"type": "string"},
-        "to": {"type": "string"},
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_SCHEMATIC_ITEM_SCHEMA = {
-    "oneOf": [
-        _SCHEMATIC_SYMBOL_ITEM,
-        _SCHEMATIC_NET_ITEM,
-        _SCHEMATIC_PIN_ITEM,
-        _SCHEMATIC_TEXT_ITEM,
-    ]
-}
-
-# ---------------------------------------------------------------------------
-# Layout item schemas
-# ---------------------------------------------------------------------------
-
-_LAYOUT_INSTANCE_ITEM = {
-    "type": "object",
-    "required": ["type", "lib", "cell", "view", "loc"],
-    "properties": {
-        "type": {"const": "Inst"},
-        "lib": {"type": "string"},
-        "cell": {"type": "string"},
-        "view": {"type": "string"},
-        "nam": {"type": "string"},
-        "ic": {"type": ["integer", "null"]},
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_LAYOUT_PCELL_ITEM = {
-    "type": "object",
-    "required": ["type", "lib", "cell", "view", "loc"],
-    "properties": {
-        "type": {"const": "Pcell"},
-        "lib": {"type": "string"},
-        "cell": {"type": "string"},
-        "view": {"type": "string"},
-        "nam": {"type": "string"},
-        "ic": {"type": ["integer", "null"]},
-        "loc": _POINT_SCHEMA,
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-        "params": {"type": "object"},
-    },
-}
-
-_LAYOUT_RECT_ITEM = {
-    "type": "object",
-    "required": ["type", "tl", "br", "ln"],
-    "properties": {
-        "type": {"const": "Rect"},
-        "tl": _POINT_SCHEMA,
-        "br": _POINT_SCHEMA,
-        "ln": {"type": "integer", "minimum": 0},
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_LAYOUT_PATH_ITEM = {
-    "type": "object",
-    "required": ["type", "dfl1", "dfl2", "ln", "w", "se", "ee", "md"],
-    "properties": {
-        "type": {"const": "Path"},
-        "dfl1": _POINT_SCHEMA,
-        "dfl2": _POINT_SCHEMA,
-        "ln": {"type": "integer", "minimum": 0},
-        "w": {"type": "number"},
-        "se": {"type": "number"},
-        "ee": {"type": "number"},
-        "md": {"type": "string"},
-        "nam": {"type": "string"},
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_LAYOUT_VIA_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "via", "xs", "ys", "xn", "yn"],
-    "properties": {
-        "type": {"const": "Via"},
-        "st": _POINT_SCHEMA,
-        "via": {"type": "object"},
-        "xs": {"type": "number"},
-        "ys": {"type": "number"},
-        "xn": {"type": "integer"},
-        "yn": {"type": "integer"},
-    },
-}
-
-_LAYOUT_PIN_ITEM = {
-    "type": "object",
-    "required": ["type", "tl", "br", "pn", "pd", "pt", "ln"],
-    "properties": {
-        "type": {"const": "Pin"},
-        "tl": _POINT_SCHEMA,
-        "br": _POINT_SCHEMA,
-        "pn": {"type": "string"},
-        "pd": {"type": "string"},
-        "pt": {"type": "string"},
-        "ln": {"type": "integer", "minimum": 0},
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_LAYOUT_LABEL_ITEM = {
-    "type": "object",
-    "required": ["type", "st", "lt", "ff", "fs", "fh", "la", "lo", "ln"],
-    "properties": {
-        "type": {"const": "Label"},
-        "st": _POINT_SCHEMA,
-        "lt": {"type": "string"},
-        "ff": {"type": "string"},
-        "fs": {"type": "string"},
-        "fh": {"type": ["number", "integer"]},
-        "la": {"type": "string"},
-        "lo": {"type": "string"},
-        "ln": {"type": "integer", "minimum": 0},
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_LAYOUT_POLYGON_ITEM = {
-    "type": "object",
-    "required": ["type", "ps", "ln"],
-    "properties": {
-        "type": {"const": "Polygon"},
-        "ps": {"type": "array", "items": _POINT_SCHEMA, "minItems": 3},
-        "ln": {"type": "integer", "minimum": 0},
-        "ang": {"type": "number"},
-        "fl": _FLIP_TUPLE_SCHEMA,
-    },
-}
-
-_LAYOUT_RULER_ITEM = {
-    "type": "object",
-    "required": ["type", "dfl1", "dfl2", "md"],
-    "properties": {
-        "type": {"const": "Ruler"},
-        "dfl1": _POINT_SCHEMA,
-        "dfl2": _POINT_SCHEMA,
-        "md": {"type": "string"},
-        "ang": {"type": "number"},
-    },
-}
-
-_LAYOUT_ITEM_SCHEMA = {
-    "oneOf": [
-        _LAYOUT_INSTANCE_ITEM,
-        _LAYOUT_PCELL_ITEM,
-        _LAYOUT_RECT_ITEM,
-        _LAYOUT_PATH_ITEM,
-        _LAYOUT_VIA_ITEM,
-        _LAYOUT_PIN_ITEM,
-        _LAYOUT_LABEL_ITEM,
-        _LAYOUT_POLYGON_ITEM,
-        _LAYOUT_RULER_ITEM,
-    ]
-}
-
-# ---------------------------------------------------------------------------
-# View header schema
-# ---------------------------------------------------------------------------
-
-_VIEW_HEADER_SCHEMA = {
-    "type": "object",
-    "required": ["viewType"],
-    "properties": {
-        "viewType": {"type": "string", "enum": ["symbol", "schematic", "layout"]},
-        "schemaVersion": {"type": "string"},
-    },
-}
-
-_GRID_SETTINGS_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "snapGrid": {
-            "type": "array",
-            "items": {"type": ["number", "integer"]},
-            "minItems": 2,
-            "maxItems": 2,
-        }
-    },
-}
-
-# ---------------------------------------------------------------------------
-# Top-level file schemas
-# ---------------------------------------------------------------------------
-
-SYMBOL_FILE_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Revolution EDA Symbol File",
-    "description": "Schema for symbol design files",
-    "type": "array",
-    "minItems": 2,
-    "items": [
-        _VIEW_HEADER_SCHEMA,
-        _GRID_SETTINGS_SCHEMA,
-    ],
-    "additionalItems": _SYMBOL_ITEM_SCHEMA,
-}
-
-SCHEMATIC_FILE_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Revolution EDA Schematic File",
-    "description": "Schema for schematic design files",
-    "type": "array",
-    "minItems": 2,
-    "items": [
-        _VIEW_HEADER_SCHEMA,
-        _GRID_SETTINGS_SCHEMA,
-    ],
-    "additionalItems": _SCHEMATIC_ITEM_SCHEMA,
-}
-
-LAYOUT_FILE_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Revolution EDA Layout File",
-    "description": "Schema for layout design files",
-    "type": "array",
-    "minItems": 2,
-    "items": [
-        _VIEW_HEADER_SCHEMA,
-        _GRID_SETTINGS_SCHEMA,
-    ],
-    "additionalItems": _LAYOUT_ITEM_SCHEMA,
-}
+SYMBOL_FILE_SCHEMA = _load_schema("symbol.schema.json")
+SCHEMATIC_FILE_SCHEMA = _load_schema("schematic.schema.json")
+LAYOUT_FILE_SCHEMA = _load_schema("layout.schema.json")
 
 # Mapping from viewType to schema
 _VIEW_TYPE_SCHEMAS = {
@@ -517,6 +87,9 @@ _VIEW_TYPE_SCHEMAS = {
     "schematic": SCHEMATIC_FILE_SCHEMA,
     "layout": LAYOUT_FILE_SCHEMA,
 }
+
+# Public helper: path to the schemas directory for tools that need it
+SCHEMAS_DIR = _SCHEMAS_DIR
 
 
 # ---------------------------------------------------------------------------

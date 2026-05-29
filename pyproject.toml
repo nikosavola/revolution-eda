@@ -24,7 +24,8 @@ classifiers = [
 ]
 
 include = [
-    { path = "pyqtgraph/**" }
+    { path = "pyqtgraph/**" },
+    { path = "revedaEditor/fileio/schemas/*.json" }
 ]
 exclude = [
     "tests",
